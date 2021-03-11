@@ -142,30 +142,32 @@ class FeatureEmbeddings:
             sys.stdout.write('Building embeddings for headlines...\n')
             self.__headerEmbeddings(data[header_col])
 
-        # BIGRAM ENTROPY & PERPLEXITY
-        sys.stdout.write('Building bigram model features for URL strings...\n')
-        urls = data[url_col].apply(lambda a: str(a))
-        split_urls = urls.apply(lambda a: self.__URLsplit(a))
-        self.__buildBigram(split_urls)
-        self.features['bigram_entropy'] = [self.bigram.entropy(x) for x in urls]
-        self.features['bigram_perplexity'] = [self.bigram.perplexity(x) for x in urls]
+        if url_col is not None:
+            # BIGRAM ENTROPY & PERPLEXITY
+            sys.stdout.write('Building bigram model features for URL strings...\n')
+            urls = data[url_col].apply(lambda a: str(a))
+            split_urls = urls.apply(lambda a: self.__URLsplit(a))
+            self.__buildBigram(split_urls)
+            self.features['bigram_entropy'] = [self.bigram.entropy(x) for x in urls]
+            self.features['bigram_perplexity'] = [self.bigram.perplexity(x) for x in urls]
 
-        # CLEAN BIGRAM ENTROPY & PERPLEXITY
-        clean_urls = urls.apply(lambda a: self.__cleanURL(str(a)))
-        split_clean_urls = clean_urls.apply(lambda a: self.__URLsplit(a))
-        self.__buildBigram(split_clean_urls)
-        self.features['clean_bigram_entropy'] = [self.bigram.entropy(x) for x in split_clean_urls]
-        self.features['clean_bigram_perplexity'] = [self.bigram.perplexity(x) for x in split_clean_urls]
+            # CLEAN BIGRAM ENTROPY & PERPLEXITY
+            clean_urls = urls.apply(lambda a: self.__cleanURL(str(a)))
+            split_clean_urls = clean_urls.apply(lambda a: self.__URLsplit(a))
+            self.__buildBigram(split_clean_urls)
+            self.features['clean_bigram_entropy'] = [self.bigram.entropy(x) for x in split_clean_urls]
+            self.features['clean_bigram_perplexity'] = [self.bigram.perplexity(x) for x in split_clean_urls]
 
-        # EDIT DISTANCE
-        sys.stdout.write('Calculating edit distance for each URL string...\n')
-        self.features['edit_distance'] = [self.__editDistance(x) for x in clean_urls]
+            # EDIT DISTANCE
+            sys.stdout.write('Calculating edit distance for each URL string...\n')
+            self.features['edit_distance'] = [self.__editDistance(x) for x in clean_urls]
 
-        # HTML INFO (STATUS, ACTIVE, WP CONTENT, # IFRAMES)
-        #sys.stdout.write('Accessing request info for features...\n')
-        #self.__htmlInfo(urls)
+            # HTML INFO (STATUS, ACTIVE, WP CONTENT, # IFRAMES)
+            #sys.stdout.write('Accessing request info for features...\n')
+            #self.__htmlInfo(urls)
         
         # ARTICLE EMBEDDINGS VIA DOC2VEC
         sys.stdout.write('Inferring article embeddings via doc2vec...\n')
         self.__articleEmbeddings(data[article_col])
         sys.stdout.flush()
+
