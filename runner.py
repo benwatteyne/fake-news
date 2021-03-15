@@ -116,14 +116,14 @@ class Runner:
         self.model = model
         return model
 
-    def test(self, model):
+    def test(self):
         correct = 0
         total = 0
         y_hat = []
         y_true = []
         with torch.no_grad():
             for x, targets in self.val_loader:
-                prediction = model(x)
+                prediction = self.model(x)
                 _, predicted = torch.max(prediction.data, 1)
                 for pred, target in zip(predicted, targets):
                     y_hat.append(int(pred))
