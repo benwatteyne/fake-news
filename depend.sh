@@ -18,12 +18,8 @@ pip3 install --user jupyterlab
 #python3 -m nltk.downloader all
 export PATH="~/.local/bin:$PATH"
 jupyter nbextension enable --py widgetsnbextension
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
+#jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 export NLTK_DATA=~/nltk_data/
 tldextract --update
 
-echo "Setting up server time"
-salloc --mem-per-cpu=5G --ntasks=1 --nodes=1 --gpus=4 --time=1:00:00
-# if you want more parallel processes, increase nodes. the most gpus a node can have is 4.
-hostname

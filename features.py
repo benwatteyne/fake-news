@@ -18,6 +18,11 @@ from gensim.parsing.preprocessing import remove_stopwords, strip_punctuation, st
 
 from tqdm.notebook import tqdm
 
+import sys
+import os
+import multiprocessing
+
+
 class FeatureEmbeddings:
     def __init__(self):
         self.features = pd.DataFrame()
@@ -100,6 +105,8 @@ class FeatureEmbeddings:
             self.features.insert(i,'h_vec_'+str(i),[self.__get_val(head_vecs,row,i) for row in range(len(head_vecs))],True)
 
     def __articleEmbeddings(self,articles):
+        sys.path.append(os.getcwd())
+        
         doc_model = Doc2Vec(vector_size=100, window=10, min_count=2, epochs=100)
         doc_model = Doc2Vec.load("models/my_doc2vec_model")
         a_vec_labels = []
@@ -107,14 +114,35 @@ class FeatureEmbeddings:
             a_vec_labels.append('a_vec_'+str(i))
         vecs = []
         loop = tqdm(total=len(articles), position=0) # the little progress bar thing
-        for i, text in enumerate(articles):
-            loop.set_description('Inferring vector for article number: '+str(i))
-            loop.update(1)
-            t = text.split()
+                
+        # do the embedding itself.
+        def embed(article):
+            t = str(article[1]).split()
             e = list(doc_model.infer_vector(t))
             vecs.append(e)
+
+        #prep some basic paralellism, to make use of the supercomputer's many cores.
+        pool = multiprocessing.Pool() 
+        jobs = [] 
+
+
+        for i, text in enumerate(articles):
+            # update progress bar
+            loop.set_description('Inferring vector for article number: '+str(i))
+            loop.update(1)
+            # add this bad boy to the pool of our many embeddings to make
+            p = multiprocessing.Process(target = embed, args=((i, text),))
+            jobs.append(p)
+            p.start()
+
+         # there must be an end to all this parallel madness
+        for p in jobs:
+            p.join()
+
+         # report the results, we have finished.
         a_embeds = pd.DataFrame(vecs,columns=a_vec_labels)
         self.features = a_embeds.join(self.features)
+                
 
     def create(self,data,url_col,article_col,header_col=None):
         '''
